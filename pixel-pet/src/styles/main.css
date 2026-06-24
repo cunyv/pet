@@ -1,0 +1,469 @@
+/* 基础重置 */
+* {
+  margin: 0;
+  padding: 0;
+  box-sizing: border-box;
+}
+
+html, body {
+  width: 200px;
+  height: 250px;
+  overflow: hidden;
+  background: transparent;
+  -webkit-app-region: no-drag;
+  user-select: none;
+}
+
+/* 宠物容器 */
+#pet-container {
+  position: relative;
+  width: 200px;
+  height: 250px;
+  cursor: grab;
+}
+
+#pet-container:active {
+  cursor: grabbing;
+}
+
+/* ========== 像素小人 - 真正的像素风 ========== */
+
+.pet {
+  position: absolute;
+  width: 64px;
+  height: 96px;
+  left: 68px;
+  bottom: 80px;
+}
+
+/* 像素画布 */
+.pixel-art {
+  width: 100%;
+  height: 100%;
+  image-rendering: pixelated;
+  image-rendering: crisp-edges;
+}
+
+/* 像素行 */
+.pixel-art .row {
+  display: flex;
+  height: 8px;
+}
+
+/* 单个像素块 */
+.pixel-art .px {
+  width: 8px;
+  height: 8px;
+  background: transparent;
+}
+
+/* ========== 颜色定义 ========== */
+
+/* 头发 - 棕色 */
+.px.hair {
+  background: #8B4513;
+  border: 1px solid #6B3410;
+}
+
+/* 皮肤 - 肤色 */
+.px.skin {
+  background: #FFDAB9;
+  border: 1px solid #E8C4A0;
+}
+
+/* 眼睛 - 黑色 */
+.px.eye {
+  background: #1a1a1a;
+  border: 1px solid #000;
+}
+
+/* 嘴巴 - 红色 */
+.px.mouth {
+  background: #FF6B6B;
+  border: 1px solid #E85555;
+}
+
+/* 衣服 - 蓝色 */
+.px.cloth {
+  background: #4A90D9;
+  border: 1px solid #3A7BC8;
+}
+
+/* 手臂 - 肤色 */
+.px.arm {
+  background: #FFDAB9;
+  border: 1px solid #E8C4A0;
+}
+
+/* 腿 - 深蓝 */
+.px.leg {
+  background: #2C5F8A;
+  border: 1px solid #1C4F7A;
+}
+
+/* 鞋子 - 棕色 */
+.px.shoe {
+  background: #8B4513;
+  border: 1px solid #6B3410;
+}
+
+/* ========== 动画状态 ========== */
+
+/* 待机动画 - 上下浮动 */
+.pet.idle {
+  animation: idle-bounce 1.5s ease-in-out infinite;
+}
+
+@keyframes idle-bounce {
+  0%, 100% { transform: translateY(0); }
+  50% { transform: translateY(-4px); }
+}
+
+/* 走路动画 - 左右摇摆+腿部动画 */
+.pet.walking {
+  animation: walk-bob 0.3s ease-in-out infinite;
+}
+
+.pet.walking .px.leg {
+  animation: walk-legs 0.3s ease-in-out infinite;
+}
+
+@keyframes walk-bob {
+  0%, 100% { transform: translateX(0) translateY(0); }
+  25% { transform: translateX(-2px) translateY(-2px); }
+  75% { transform: translateX(2px) translateY(-2px); }
+}
+
+@keyframes walk-legs {
+  0%, 100% { transform: translateY(0); }
+  50% { transform: translateY(-2px); }
+}
+
+/* 睡觉动画 */
+.pet.sleeping {
+  animation: sleep-breathe 2s ease-in-out infinite;
+}
+
+.pet.sleeping .px.eye {
+  background: #1a1a1a;
+  height: 2px;
+  margin-top: 3px;
+}
+
+.pet.sleeping .px.mouth {
+  background: #FFDAB9;
+  border-color: #E8C4A0;
+}
+
+@keyframes sleep-breathe {
+  0%, 100% { transform: scaleY(1); }
+  50% { transform: scaleY(0.97); }
+}
+
+/* 开心动画 - 跳跃 */
+.pet.happy {
+  animation: happy-jump 0.4s ease-out;
+}
+
+.pet.happy .px.mouth {
+  background: #FF4444;
+  height: 4px;
+  margin-top: 2px;
+}
+
+@keyframes happy-jump {
+  0% { transform: translateY(0) scale(1); }
+  40% { transform: translateY(-16px) scale(1.05); }
+  100% { transform: translateY(0) scale(1); }
+}
+
+/* 吃东西动画 */
+.pet.eating {
+  animation: eat-nom 0.2s ease-in-out 3;
+}
+
+.pet.eating .px.mouth {
+  animation: eat-chew 0.2s ease-in-out 3;
+}
+
+@keyframes eat-nom {
+  0%, 100% { transform: translateY(0); }
+  50% { transform: translateY(-2px); }
+}
+
+@keyframes eat-chew {
+  0%, 100% { height: 8px; }
+  50% { height: 4px; }
+}
+
+/* 无聊 - 慢慢左右晃 */
+.pet.bored {
+  animation: bored-sway 2.4s ease-in-out infinite;
+  filter: saturate(0.85);
+}
+
+.pet.bored .px.eye {
+  height: 3px;
+  margin-top: 2px;
+}
+
+@keyframes bored-sway {
+  0%, 100% { transform: translateX(0); }
+  35% { transform: translateX(-3px); }
+  70% { transform: translateX(3px); }
+}
+
+/* 困 - 低头呼吸 */
+.pet.sleepy {
+  animation: sleepy-nod 1.8s ease-in-out infinite;
+  filter: brightness(0.92);
+}
+
+.pet.sleepy .px.eye {
+  height: 2px;
+  margin-top: 3px;
+}
+
+@keyframes sleepy-nod {
+  0%, 100% { transform: translateY(0) scaleY(1); }
+  50% { transform: translateY(4px) scaleY(0.96); }
+}
+
+/* 饿 - 轻微发抖 */
+.pet.hungry {
+  animation: hungry-shiver 0.25s linear infinite;
+  filter: saturate(1.15);
+}
+
+.pet.hungry .px.mouth {
+  background: #D94A4A;
+}
+
+@keyframes hungry-shiver {
+  0%, 100% { transform: translateX(0); }
+  25% { transform: translateX(-1px); }
+  75% { transform: translateX(1px); }
+}
+
+/* 委屈 - 缩一点 */
+.pet.sad {
+  animation: sad-slump 2s ease-in-out infinite;
+  filter: grayscale(0.25) brightness(0.92);
+}
+
+.pet.sad .px.eye {
+  background: #2F4F6F;
+}
+
+@keyframes sad-slump {
+  0%, 100% { transform: translateY(2px) scaleY(0.96); }
+  50% { transform: translateY(5px) scaleY(0.93); }
+}
+
+/* 跟随鼠标 - 小跑 */
+.pet.following {
+  animation: follow-run 0.35s ease-in-out infinite;
+}
+
+.pet.following .px.leg {
+  animation: walk-legs 0.25s ease-in-out infinite;
+}
+
+@keyframes follow-run {
+  0%, 100% { transform: translateY(0); }
+  50% { transform: translateY(-5px); }
+}
+
+/* ========== 朝向 ========== */
+.pet.face-left {
+  transform: scaleX(-1);
+}
+
+.pet.face-right {
+  transform: scaleX(1);
+}
+
+/* ========== 附属元素 ========== */
+
+/* 心形指示器 */
+#status-indicator {
+  position: absolute;
+  top: 60px;
+  left: 50%;
+  transform: translateX(-50%);
+  z-index: 10;
+}
+
+#status-indicator .heart {
+  font-size: 18px;
+  animation: heart-pop 1s ease-out forwards;
+}
+
+@keyframes heart-pop {
+  0% { transform: scale(0) translateY(0); opacity: 0; }
+  20% { transform: scale(1.5) translateY(-10px); opacity: 1; }
+  100% { transform: scale(0.8) translateY(-50px); opacity: 0; }
+}
+
+/* 气泡对话框 - 像素风格 */
+#speech-bubble {
+  position: absolute;
+  top: 15px;
+  left: 50%;
+  transform: translateX(-50%);
+  background: #fff;
+  border: 3px solid #000;
+  padding: 8px 14px;
+  font-size: 12px;
+  font-family: 'Courier New', monospace;
+  z-index: 500;
+  text-align: center;
+  image-rendering: pixelated;
+  box-shadow: 3px 3px 0 rgba(0,0,0,0.3);
+  white-space: nowrap;
+}
+
+#speech-bubble::after {
+  content: '';
+  position: absolute;
+  top: 100%;
+  left: 50%;
+  transform: translateX(-50%);
+  width: 0;
+  height: 0;
+  border-left: 6px solid transparent;
+  border-right: 6px solid transparent;
+  border-top: 8px solid #000;
+}
+
+/* 喂食动画 */
+#food-animation {
+  position: absolute;
+  top: 80px;
+  left: 50%;
+  transform: translateX(-50%);
+  z-index: 50;
+}
+
+#food-animation .food {
+  font-size: 28px;
+  animation: food-toss 0.6s ease-out forwards;
+}
+
+@keyframes food-toss {
+  0% { transform: translateY(-40px) scale(0) rotate(-20deg); opacity: 0; }
+  50% { transform: translateY(10px) scale(1.3) rotate(10deg); opacity: 1; }
+  100% { transform: translateY(0) scale(1) rotate(0deg); opacity: 1; }
+}
+
+/* ========== 右键菜单 - 像素风格 ========== */
+#context-menu {
+  position: fixed;
+  background: #F7F7F7;
+  border: 3px solid #000;
+  box-shadow: 4px 4px 0 rgba(0,0,0,0.4);
+  z-index: 10000;
+  min-width: 178px;
+  max-height: calc(100vh - 10px);
+  overflow-y: auto;
+  font-family: 'Courier New', monospace;
+  image-rendering: pixelated;
+  padding: 5px 0;
+}
+
+.menu-title {
+  padding: 6px 12px 5px;
+  font-size: 11px;
+  font-weight: bold;
+  color: #555;
+  background: #E6E6E6;
+  border-bottom: 2px solid #000;
+  letter-spacing: 0;
+}
+
+.menu-group-label {
+  padding: 3px 12px 2px;
+  font-size: 10px;
+  font-weight: bold;
+  color: #666;
+  letter-spacing: 0;
+}
+
+.menu-item {
+  display: grid;
+  grid-template-columns: 20px minmax(72px, 1fr) 38px;
+  align-items: center;
+  gap: 6px;
+  min-height: 30px;
+  padding: 7px 10px;
+  font-size: 13px;
+  cursor: pointer;
+  transition: background 0.1s;
+  white-space: nowrap;
+}
+
+.menu-icon {
+  text-align: center;
+  font-size: 13px;
+}
+
+.menu-check {
+  min-width: 12px;
+  text-align: right;
+  font-weight: bold;
+}
+
+.menu-value {
+  min-width: 34px;
+  text-align: right;
+  font-size: 11px;
+  color: #444;
+}
+
+.menu-item:hover {
+  background: #4A90D9;
+  color: #fff;
+}
+
+.menu-item:hover .menu-value {
+  color: #fff;
+}
+
+.menu-item.active {
+  background: #DCEEFF;
+}
+
+.menu-item.active:hover {
+  background: #4A90D9;
+}
+
+.menu-item.danger:hover {
+  background: #D94A4A;
+}
+
+.menu-separator {
+  height: 2px;
+  margin: 5px 8px;
+  background: #000;
+}
+
+/* 隐藏状态 */
+.hidden {
+  display: none !important;
+}
+
+/* 睡觉时的ZZZ */
+.sleep-zzz {
+  position: absolute;
+  top: -10px;
+  right: -15px;
+  font-size: 14px;
+  animation: zzz-float 1.5s ease-in-out infinite;
+  z-index: 50;
+}
+
+@keyframes zzz-float {
+  0% { transform: translateY(0) scale(0.8); opacity: 0.5; }
+  50% { transform: translateY(-15px) scale(1.1); opacity: 1; }
+  100% { transform: translateY(-30px) scale(0.8); opacity: 0; }
+}

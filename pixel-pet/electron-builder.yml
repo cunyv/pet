@@ -1,0 +1,56 @@
+appId: com.pixelpet.app
+productName: Pixel Pet
+copyright: Copyright © 2024
+
+# 目录配置
+directories:
+  output: dist
+  buildResources: resources
+
+# 文件配置
+files:
+  - "**/*"
+  - "!**/node_modules/*/{CHANGELOG.md,README.md,README,readme.md,readme}"
+  - "!**/node_modules/.cache/**"
+  - "!**/.*"
+  - "!**/*.map"
+  - "!**/*.ts"
+  - "!dist/**"
+
+# Mac配置
+mac:
+  category: public.app-category.entertainment
+  icon: resources/icon.icns
+  target:
+    - target: dmg
+      arch:
+        - x64
+        - arm64
+  darkModeSupport: false
+  hardenedRuntime: false
+  gatekeeperAssess: false
+
+# DMG配置
+dmg:
+  contents:
+    - x: 130
+      y: 220
+    - x: 410
+      y: 220
+      type: link
+      path: /Applications
+  window:
+    width: 540
+    height: 380
+
+# 发布配置（可选）
+publish:
+  provider: generic
+  url: https://example.com/releases
+
+# 构建配置
+buildVersion: 1.0.0
+compression: maximum
+asar: true
+asarUnpack:
+  - "**/*.node"

@@ -1,0 +1,189 @@
+<!DOCTYPE html>
+<html lang="zh-CN">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>像素宠物</title>
+  <link rel="stylesheet" href="styles/main.css">
+</head>
+<body>
+  <div id="pet-container">
+    <!-- 像素小人 - 使用grid像素绘制 -->
+    <div id="pet" class="pet idle">
+      <div class="pixel-art">
+        <!-- 第1行 - 头发顶部 -->
+        <div class="row">
+          <div class="px"></div><div class="px"></div>
+          <div class="px hair"></div><div class="px hair"></div>
+          <div class="px hair"></div><div class="px hair"></div>
+          <div class="px"></div><div class="px"></div>
+        </div>
+        <!-- 第2行 - 头发 -->
+        <div class="row">
+          <div class="px"></div>
+          <div class="px hair"></div><div class="px hair"></div>
+          <div class="px skin"></div><div class="px skin"></div>
+          <div class="px hair"></div><div class="px hair"></div>
+          <div class="px"></div>
+        </div>
+        <!-- 第3行 - 脸部 -->
+        <div class="row">
+          <div class="px hair"></div>
+          <div class="px skin"></div>
+          <div class="px eye"></div>
+          <div class="px skin"></div>
+          <div class="px skin"></div>
+          <div class="px eye"></div>
+          <div class="px skin"></div>
+          <div class="px hair"></div>
+        </div>
+        <!-- 第4行 - 脸部 -->
+        <div class="row">
+          <div class="px"></div>
+          <div class="px skin"></div>
+          <div class="px skin"></div>
+          <div class="px skin"></div>
+          <div class="px skin"></div>
+          <div class="px skin"></div>
+          <div class="px skin"></div>
+          <div class="px"></div>
+        </div>
+        <!-- 第5行 - 嘴巴 -->
+        <div class="row">
+          <div class="px"></div>
+          <div class="px skin"></div>
+          <div class="px skin"></div>
+          <div class="px mouth"></div>
+          <div class="px mouth"></div>
+          <div class="px skin"></div>
+          <div class="px skin"></div>
+          <div class="px"></div>
+        </div>
+        <!-- 第6行 - 下巴 -->
+        <div class="row">
+          <div class="px"></div><div class="px"></div>
+          <div class="px skin"></div><div class="px skin"></div>
+          <div class="px skin"></div><div class="px skin"></div>
+          <div class="px"></div><div class="px"></div>
+        </div>
+        <!-- 第7行 - 身体顶部 -->
+        <div class="row">
+          <div class="px"></div>
+          <div class="px cloth"></div><div class="px cloth"></div>
+          <div class="px cloth"></div><div class="px cloth"></div>
+          <div class="px cloth"></div><div class="px cloth"></div>
+          <div class="px"></div>
+        </div>
+        <!-- 第8行 - 身体+手臂 -->
+        <div class="row">
+          <div class="px arm"></div>
+          <div class="px cloth"></div><div class="px cloth"></div>
+          <div class="px cloth"></div><div class="px cloth"></div>
+          <div class="px cloth"></div><div class="px cloth"></div>
+          <div class="px arm"></div>
+        </div>
+        <!-- 第9行 - 身体+手臂 -->
+        <div class="row">
+          <div class="px arm"></div>
+          <div class="px cloth"></div><div class="px cloth"></div>
+          <div class="px cloth"></div><div class="px cloth"></div>
+          <div class="px cloth"></div><div class="px cloth"></div>
+          <div class="px arm"></div>
+        </div>
+        <!-- 第10行 - 身体底部 -->
+        <div class="row">
+          <div class="px"></div>
+          <div class="px cloth"></div><div class="px cloth"></div>
+          <div class="px cloth"></div><div class="px cloth"></div>
+          <div class="px cloth"></div><div class="px cloth"></div>
+          <div class="px"></div>
+        </div>
+        <!-- 第11行 - 腿部 -->
+        <div class="row">
+          <div class="px"></div><div class="px"></div>
+          <div class="px leg"></div><div class="px leg"></div>
+          <div class="px"></div><div class="px"></div>
+          <div class="px leg"></div><div class="px leg"></div>
+        </div>
+        <!-- 第12行 - 脚 -->
+        <div class="row">
+          <div class="px"></div><div class="px"></div>
+          <div class="px shoe"></div><div class="px shoe"></div>
+          <div class="px"></div><div class="px"></div>
+          <div class="px shoe"></div><div class="px shoe"></div>
+        </div>
+      </div>
+    </div>
+
+    <!-- 状态指示器 -->
+    <div id="status-indicator" class="hidden">
+      <div class="heart">❤️</div>
+    </div>
+
+    <!-- 气泡对话框 -->
+    <div id="speech-bubble" class="hidden">
+      <div class="bubble-content"></div>
+    </div>
+
+    <!-- 喂食动画 -->
+    <div id="food-animation" class="hidden">
+      <div class="food">🍕</div>
+    </div>
+  </div>
+
+  <!-- 右键菜单 -->
+  <div id="context-menu" class="hidden">
+    <div class="menu-title">像素宠物</div>
+    <div class="menu-item" data-action="pet"><span class="menu-icon">🤚</span><span>摸摸头</span></div>
+    <div class="menu-item" data-action="feed"><span class="menu-icon">🍕</span><span>喂食</span></div>
+    <div class="menu-item" data-action="sleep"><span class="menu-icon">😴</span><span>睡觉</span></div>
+    <div class="menu-item" data-action="wake"><span class="menu-icon">⏰</span><span>叫醒</span></div>
+    <div class="menu-separator"></div>
+    <div class="menu-item menu-toggle" data-action="toggle-passthrough">
+      <span class="menu-icon">🖱️</span>
+      <span class="menu-label">开启穿透模式</span>
+      <span class="menu-check"></span>
+    </div>
+    <div class="menu-separator"></div>
+    <div class="menu-group-label">窗口设置</div>
+    <div class="menu-item" data-action="cycle-opacity">
+      <span class="menu-icon">◐</span>
+      <span>透明度</span>
+      <span class="menu-value" data-setting="opacity">100%</span>
+    </div>
+    <div class="menu-item" data-action="cycle-size">
+      <span class="menu-icon">□</span>
+      <span>大小</span>
+      <span class="menu-value" data-setting="size">标准</span>
+    </div>
+    <div class="menu-item menu-toggle" data-action="toggle-always-on-top">
+      <span class="menu-icon">⌃</span>
+      <span>窗口置顶</span>
+      <span class="menu-check" data-setting="always-on-top">✓</span>
+    </div>
+    <div class="menu-item menu-toggle" data-action="toggle-auto-hide">
+      <span class="menu-icon">◷</span>
+      <span class="menu-label">自动隐藏</span>
+      <span class="menu-check" data-setting="auto-hide"></span>
+    </div>
+    <div class="menu-item" data-action="reset-position">
+      <span class="menu-icon">⌂</span>
+      <span>重置位置</span>
+      <span></span>
+    </div>
+    <div class="menu-item" data-action="hide"><span class="menu-icon">👁️</span><span>隐藏宠物</span></div>
+    <div class="menu-separator"></div>
+    <div class="menu-item danger" data-action="exit"><span class="menu-icon">✕</span><span>退出</span></div>
+  </div>
+
+  <script src="scripts/pet.js"></script>
+  <script src="scripts/animation.js"></script>
+  <script src="scripts/interaction.js"></script>
+  <script>
+    // 初始化应用
+    document.addEventListener('DOMContentLoaded', () => {
+      window.petApp = new PetApp()
+    })
+  </script>
+</body>
+</html>
