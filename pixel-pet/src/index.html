@@ -9,110 +9,12 @@
 <body>
   <div id="pet-container">
     <!-- 像素小人 - 使用grid像素绘制 -->
-    <div id="pet" class="pet idle">
+        <div id="pet" class="pet idle skin-human">
+    <div class="pet-inner">
       <div class="pixel-art">
-        <!-- 第1行 - 头发顶部 -->
-        <div class="row">
-          <div class="px"></div><div class="px"></div>
-          <div class="px hair"></div><div class="px hair"></div>
-          <div class="px hair"></div><div class="px hair"></div>
-          <div class="px"></div><div class="px"></div>
-        </div>
-        <!-- 第2行 - 头发 -->
-        <div class="row">
-          <div class="px"></div>
-          <div class="px hair"></div><div class="px hair"></div>
-          <div class="px skin"></div><div class="px skin"></div>
-          <div class="px hair"></div><div class="px hair"></div>
-          <div class="px"></div>
-        </div>
-        <!-- 第3行 - 脸部 -->
-        <div class="row">
-          <div class="px hair"></div>
-          <div class="px skin"></div>
-          <div class="px eye"></div>
-          <div class="px skin"></div>
-          <div class="px skin"></div>
-          <div class="px eye"></div>
-          <div class="px skin"></div>
-          <div class="px hair"></div>
-        </div>
-        <!-- 第4行 - 脸部 -->
-        <div class="row">
-          <div class="px"></div>
-          <div class="px skin"></div>
-          <div class="px skin"></div>
-          <div class="px skin"></div>
-          <div class="px skin"></div>
-          <div class="px skin"></div>
-          <div class="px skin"></div>
-          <div class="px"></div>
-        </div>
-        <!-- 第5行 - 嘴巴 -->
-        <div class="row">
-          <div class="px"></div>
-          <div class="px skin"></div>
-          <div class="px skin"></div>
-          <div class="px mouth"></div>
-          <div class="px mouth"></div>
-          <div class="px skin"></div>
-          <div class="px skin"></div>
-          <div class="px"></div>
-        </div>
-        <!-- 第6行 - 下巴 -->
-        <div class="row">
-          <div class="px"></div><div class="px"></div>
-          <div class="px skin"></div><div class="px skin"></div>
-          <div class="px skin"></div><div class="px skin"></div>
-          <div class="px"></div><div class="px"></div>
-        </div>
-        <!-- 第7行 - 身体顶部 -->
-        <div class="row">
-          <div class="px"></div>
-          <div class="px cloth"></div><div class="px cloth"></div>
-          <div class="px cloth"></div><div class="px cloth"></div>
-          <div class="px cloth"></div><div class="px cloth"></div>
-          <div class="px"></div>
-        </div>
-        <!-- 第8行 - 身体+手臂 -->
-        <div class="row">
-          <div class="px arm"></div>
-          <div class="px cloth"></div><div class="px cloth"></div>
-          <div class="px cloth"></div><div class="px cloth"></div>
-          <div class="px cloth"></div><div class="px cloth"></div>
-          <div class="px arm"></div>
-        </div>
-        <!-- 第9行 - 身体+手臂 -->
-        <div class="row">
-          <div class="px arm"></div>
-          <div class="px cloth"></div><div class="px cloth"></div>
-          <div class="px cloth"></div><div class="px cloth"></div>
-          <div class="px cloth"></div><div class="px cloth"></div>
-          <div class="px arm"></div>
-        </div>
-        <!-- 第10行 - 身体底部 -->
-        <div class="row">
-          <div class="px"></div>
-          <div class="px cloth"></div><div class="px cloth"></div>
-          <div class="px cloth"></div><div class="px cloth"></div>
-          <div class="px cloth"></div><div class="px cloth"></div>
-          <div class="px"></div>
-        </div>
-        <!-- 第11行 - 腿部 -->
-        <div class="row">
-          <div class="px"></div><div class="px"></div>
-          <div class="px leg"></div><div class="px leg"></div>
-          <div class="px"></div><div class="px"></div>
-          <div class="px leg"></div><div class="px leg"></div>
-        </div>
-        <!-- 第12行 - 脚 -->
-        <div class="row">
-          <div class="px"></div><div class="px"></div>
-          <div class="px shoe"></div><div class="px shoe"></div>
-          <div class="px"></div><div class="px"></div>
-          <div class="px shoe"></div><div class="px shoe"></div>
-        </div>
+        <!-- 由 skin-registry.js 动态渲染 -->
       </div>
+    </div>
     </div>
 
     <!-- 状态指示器 -->
@@ -171,11 +73,19 @@
       <span>重置位置</span>
       <span></span>
     </div>
+    <div class="menu-separator"></div>
+    <div class="menu-group-label">切换皮肤</div>
+    <div class="menu-item" data-action="skin" data-skin="human"><span class="menu-icon">🧑</span><span>小人</span><span class="menu-check" data-skin-check="human"></span></div>
+    <div class="menu-item" data-action="skin" data-skin="cat"><span class="menu-icon">🐱</span><span>小猫</span><span class="menu-check" data-skin-check="cat"></span></div>
+    <div class="menu-item" data-action="skin" data-skin="ghost"><span class="menu-icon">👻</span><span>幽灵</span><span class="menu-check" data-skin-check="ghost"></span></div>
+    <div class="menu-item" data-action="skin" data-skin="dog"><span class="menu-icon">🐶</span><span>小狗</span><span class="menu-check" data-skin-check="dog"></span></div>
+    <div class="menu-item" data-action="skin" data-skin="frog"><span class="menu-icon">🐸</span><span>青蛙</span><span class="menu-check" data-skin-check="frog"></span></div>
     <div class="menu-item" data-action="hide"><span class="menu-icon">👁️</span><span>隐藏宠物</span></div>
     <div class="menu-separator"></div>
     <div class="menu-item danger" data-action="exit"><span class="menu-icon">✕</span><span>退出</span></div>
   </div>
 
+  <script src="scripts/skin-registry.js"></script>
   <script src="scripts/pet.js"></script>
   <script src="scripts/animation.js"></script>
   <script src="scripts/interaction.js"></script>

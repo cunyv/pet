@@ -7,8 +7,8 @@ class InteractionManager {
     // 拖拽状态
     this.isDragging = false
     this.hasDragged = false
-    this.dragStartX = 0
-    this.dragStartY = 0
+    this.dragStartScreenX = 0
+    this.dragStartScreenY = 0
     this.dragThreshold = 5
 
     // 点击状态
@@ -53,16 +53,25 @@ class InteractionManager {
       this.recordUserActivity()
       this.isDragging = true
       this.hasDragged = false
-      this.dragStartX = e.clientX
-      this.dragStartY = e.clientY
+      // 使用 screenX/screenY（屏幕绝对坐标），避免 moveWindow 后 clientX 变化导致反馈循环
+      this.dragStartScreenX = e.screenX
+      this.dragStartScreenY = e.screenY
+      this.pet.isDragging = true
+      // 拖拽时停止走路并暂停 CSS 动画，避免残影和方向冲突
+      if (this.pet.walkInterval) {
+        clearInterval(this.pet.walkInterval)
+        this.pet.walkInterval = null
+      }
+      this.pet.petElement.style.animation = 'none'
       e.preventDefault()
     })
 
     document.addEventListener('mousemove', (e) => {
       if (!this.isDragging) return
 
-      const deltaX = e.clientX - this.dragStartX
-      const deltaY = e.clientY - this.dragStartY
+      // screenX/screenY 是屏幕绝对坐标，不随窗口移动而变化，不会产生反馈循环
+      const deltaX = e.screenX - this.dragStartScreenX
+      const deltaY = e.screenY - this.dragStartScreenY
 
       if (Math.abs(deltaX) > this.dragThreshold || Math.abs(deltaY) > this.dragThreshold) {
         this.hasDragged = true
@@ -71,13 +80,10 @@ class InteractionManager {
           window.electronAPI.moveWindow(deltaX, deltaY)
         }
 
-        this.dragStartX = e.clientX
-        this.dragStartY = e.clientY
+        this.dragStartScreenX = e.screenX
+        this.dragStartScreenY = e.screenY
 
-        if (this.pet.state !== PetState.WALKING) {
-          this.pet.setState(PetState.WALKING)
-        }
-
+        // 只更新朝向，不切换状态，避免触发行走动画导致分身
         this.pet.setDirection(deltaX > 0 ? Direction.RIGHT : Direction.LEFT)
       }
     })
@@ -85,9 +91,16 @@ class InteractionManager {
     document.addEventListener('mouseup', () => {
       if (this.isDragging) {
         this.isDragging = false
-        if (this.pet.state === PetState.WALKING && this.hasDragged) {
-          this.pet.setState(PetState.IDLE)
+        this.pet.isDragging = false
+        // 恢复 CSS 动画并播放落地弹跳
+        this.pet.petElement.style.animation = ''
+        this.playLandingAnimation()
+        // 拖拽结束时随机说一句话
+        if (this.hasDragged && typeof pickDialogue === 'function') {
+          this.pet.showSpeechBubble(pickDialogue('drag'), 1500)
         }
+        // 检查窗口是否超出屏幕，自动回到工作区
+        this.snapWindowToScreen()
         this.updateMousePassthrough(this.lastMouseX, this.lastMouseY)
       }
     })
@@ -161,7 +174,7 @@ class InteractionManager {
       if (!menuItem) return
 
       const action = menuItem.dataset.action
-      this.handleMenuAction(action)
+      this.handleMenuAction(action, menuItem)
       this.hideContextMenu()
     })
 
@@ -260,10 +273,18 @@ class InteractionManager {
     if (autoHideCheck) {
       autoHideCheck.textContent = this.autoHideEnabled ? '✓' : ''
     }
+
+    // 更新皮肤选中状态
+    this.contextMenu.querySelectorAll('[data-skin-check]').forEach(el => {
+      el.textContent = el.dataset.skinCheck === this.pet.currentSkin ? '✓' : ''
+    })
+    this.contextMenu.querySelectorAll('[data-action="skin"]').forEach(el => {
+      el.classList.toggle('active', el.dataset.skin === this.pet.currentSkin)
+    })
   }
 
   // 处理菜单动作
-  handleMenuAction(action) {
+  handleMenuAction(action, menuItem) {
     console.log('菜单动作:', action)
     this.recordUserActivity()
 
@@ -336,6 +357,13 @@ class InteractionManager {
           window.close()
         }
         break
+
+      case 'skin':
+        if (menuItem && menuItem.dataset.skin) {
+          this.pet.setSkin(menuItem.dataset.skin)
+          this.updateContextMenuState()
+        }
+        break
     }
   }
 
@@ -345,7 +373,8 @@ class InteractionManager {
       this.lastMouseX = e.clientX
       this.lastMouseY = e.clientY
       this.recordUserActivity()
-      this.pet.noticeMouse()
+      // 传入鼠标 X 坐标，让宠物朝鼠标方向转头
+      this.pet.noticeMouse(e.clientX)
 
       if (this.mouseTrackingFrame) return
 
@@ -463,6 +492,8 @@ class InteractionManager {
       this.petSettings = { ...this.petSettings, ...settings }
       this.updateContextMenuState()
       this.updateMousePassthrough(this.lastMouseX, this.lastMouseY)
+    }).catch((err) => {
+      console.warn('获取初始设置失败:', err.message)
     })
 
     window.electronAPI.onFeedPet(() => {
@@ -543,23 +574,11 @@ class PetApp {
   // 处理状态变化
   handleStateChange(oldState, newState) {
     console.log(`状态变化: ${oldState} -> ${newState}`)
-
-    switch (newState) {
-      case PetState.HAPPY:
-        this.effectsManager.playPetEffect()
-        break
-      case PetState.EATING:
-        this.effectsManager.playFeedEffect()
-        break
-      case PetState.SLEEPING:
-        this.effectsManager.playSleepEffect()
-        break
-    }
   }
 
   // 显示欢迎消息
   showWelcomeMessage() {
-    const messages = ['你好呀！', '欢迎~', '摸摸我吧！', '我好饿...']
+    const messages = typeof DIALOGUES !== 'undefined' ? DIALOGUES.idle : ['你好呀！', '欢迎~']
     const msg = messages[Math.floor(Math.random() * messages.length)]
 
     setTimeout(() => {
@@ -570,6 +589,40 @@ class PetApp {
   // 获取应用状态
   getStatus() {
     return this.pet.getStatus()
+  }
+
+  // 播放落地弹跳动画
+  playLandingAnimation() {
+    const el = this.pet.petElement
+    if (!el) return
+    el.classList.remove('landing')
+    // 强制 reflow 确保动画重新触发
+    void el.offsetWidth
+    el.classList.add('landing')
+    setTimeout(() => el.classList.remove('landing'), 400)
+  }
+
+  // 检查窗口是否超出屏幕工作区，自动拉回
+  async snapWindowToScreen() {
+    if (!window.electronAPI) return
+    try {
+      const [winPos, screenPos] = await Promise.all([
+        window.electronAPI.getWindowPosition(),
+        window.electronAPI.getScreenSize(),
+      ])
+      // 简单判断：窗口中心是否在屏幕内
+      const petW = 200, petH = 250
+      let dx = 0, dy = 0
+      if (winPos.x + petW < 0) dx = -winPos.x + 20
+      else if (winPos.x > screenPos.width - 50) dx = screenPos.width - petW - 20 - winPos.x
+      if (winPos.y + petH < 0) dy = -winPos.y + 20
+      else if (winPos.y > screenPos.height - 50) dy = screenPos.height - petH - 20 - winPos.y
+      if (dx !== 0 || dy !== 0) {
+        window.electronAPI.moveWindow(dx, dy)
+      }
+    } catch (e) {
+      console.warn('snapWindowToScreen 失败:', e.message)
+    }
   }
 
   // 清理资源

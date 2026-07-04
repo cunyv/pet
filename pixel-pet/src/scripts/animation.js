@@ -4,13 +4,11 @@ class AnimationController {
     this.pet = pet
     this.particlePool = []
     this.activeParticles = []
-    this.animationFrameId = null
   }
 
   // 初始化动画系统
   init() {
     this.createParticlePool()
-    this.startAnimationLoop()
   }
 
   // 创建粒子对象池
@@ -52,23 +50,22 @@ class AnimationController {
     }
   }
 
-  // 开始动画循环
-  startAnimationLoop() {
-    const animate = () => {
-      this.updateParticles()
-      this.animationFrameId = requestAnimationFrame(animate)
-    }
-    animate()
-  }
-
-  // 更新粒子状态
-  updateParticles() {
-    this.activeParticles.forEach(particle => {
-      const opacity = parseFloat(particle.style.opacity)
-      if (opacity <= 0) {
+  // 标记粒子为淡出中，使用 transitionend 自动回收
+  markParticleForRelease(particle) {
+    const onEnd = (e) => {
+      if (e.propertyName === 'opacity') {
+        particle.removeEventListener('transitionend', onEnd)
         this.releaseParticle(particle)
       }
-    })
+    }
+    particle.addEventListener('transitionend', onEnd)
+    // 安全兜底：如果 transitionend 未触发，800ms 后强制回收
+    setTimeout(() => {
+      if (this.activeParticles.includes(particle)) {
+        particle.removeEventListener('transitionend', onEnd)
+        this.releaseParticle(particle)
+      }
+    }, 800)
   }
 
   // 创建爱心粒子效果
@@ -83,6 +80,7 @@ class AnimationController {
         heart.style.top = `${y}px`
         heart.style.opacity = '1'
         heart.style.transform = 'translateY(0) scale(1)'
+        this.markParticleForRelease(heart)
 
         requestAnimationFrame(() => {
           heart.style.transform = `translateY(-${40 + Math.random() * 20}px) scale(0.5)`
@@ -104,6 +102,7 @@ class AnimationController {
         star.style.top = `${y}px`
         star.style.opacity = '1'
         star.style.transform = 'translateY(0) rotate(0deg)'
+        this.markParticleForRelease(star)
 
         requestAnimationFrame(() => {
           star.style.transform = `translateY(-${30 + Math.random() * 20}px) rotate(${Math.random() * 360}deg) scale(0.3)`
@@ -124,6 +123,7 @@ class AnimationController {
     food.style.top = `${y}px`
     food.style.opacity = '1'
     food.style.transform = 'scale(1)'
+    this.markParticleForRelease(food)
 
     requestAnimationFrame(() => {
       food.style.transform = 'scale(0) rotate(360deg)'
@@ -131,11 +131,9 @@ class AnimationController {
     })
   }
 
-  // 停止动画循环
+  // 停止动画
   stop() {
-    if (this.animationFrameId) {
-      cancelAnimationFrame(this.animationFrameId)
-    }
+    // transitionend-based cleanup is automatic
   }
 
   // 清理资源

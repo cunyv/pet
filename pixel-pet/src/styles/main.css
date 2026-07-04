@@ -31,9 +31,9 @@ html, body {
 .pet {
   position: absolute;
   width: 64px;
-  height: 96px;
+  height: 80px;
   left: 68px;
-  bottom: 80px;
+  bottom: 90px;
 }
 
 /* 像素画布 */
@@ -47,65 +47,17 @@ html, body {
 /* 像素行 */
 .pixel-art .row {
   display: flex;
-  height: 8px;
+  height: 5px;
 }
 
 /* 单个像素块 */
 .pixel-art .px {
-  width: 8px;
-  height: 8px;
+  width: 4px;
+  height: 4px;
   background: transparent;
 }
 
-/* ========== 颜色定义 ========== */
-
-/* 头发 - 棕色 */
-.px.hair {
-  background: #8B4513;
-  border: 1px solid #6B3410;
-}
-
-/* 皮肤 - 肤色 */
-.px.skin {
-  background: #FFDAB9;
-  border: 1px solid #E8C4A0;
-}
-
-/* 眼睛 - 黑色 */
-.px.eye {
-  background: #1a1a1a;
-  border: 1px solid #000;
-}
-
-/* 嘴巴 - 红色 */
-.px.mouth {
-  background: #FF6B6B;
-  border: 1px solid #E85555;
-}
-
-/* 衣服 - 蓝色 */
-.px.cloth {
-  background: #4A90D9;
-  border: 1px solid #3A7BC8;
-}
-
-/* 手臂 - 肤色 */
-.px.arm {
-  background: #FFDAB9;
-  border: 1px solid #E8C4A0;
-}
-
-/* 腿 - 深蓝 */
-.px.leg {
-  background: #2C5F8A;
-  border: 1px solid #1C4F7A;
-}
-
-/* 鞋子 - 棕色 */
-.px.shoe {
-  background: #8B4513;
-  border: 1px solid #6B3410;
-}
+/* 颜色由 skin-registry.js 动态生成 */
 
 /* ========== 动画状态 ========== */
 
@@ -176,6 +128,18 @@ html, body {
   40% { transform: translateY(-16px) scale(1.05); }
   100% { transform: translateY(0) scale(1); }
 }
+/* 落地弹跳动画（拖拽松手后） */
+.pet.landing {
+  animation: landing-bounce 0.35s ease-out;
+}
+
+@keyframes landing-bounce {
+  0% { transform: translateY(-12px) scaleY(1.08) scaleX(0.94); }
+  40% { transform: translateY(3px) scaleY(0.92) scaleX(1.06); }
+  70% { transform: translateY(-3px) scaleY(1.03) scaleX(0.98); }
+  100% { transform: translateY(0) scaleY(1) scaleX(1); }
+}
+
 
 /* 吃东西动画 */
 .pet.eating {
@@ -274,12 +238,18 @@ html, body {
   50% { transform: translateY(-5px); }
 }
 
+.pet-inner {
+  width: 100%;
+  height: 100%;
+  position: relative;
+}
+
 /* ========== 朝向 ========== */
-.pet.face-left {
+.pet.face-left .pet-inner {
   transform: scaleX(-1);
 }
 
-.pet.face-right {
+.pet.face-right .pet-inner {
   transform: scaleX(1);
 }
 
@@ -466,4 +436,41 @@ html, body {
   0% { transform: translateY(0) scale(0.8); opacity: 0.5; }
   50% { transform: translateY(-15px) scale(1.1); opacity: 1; }
   100% { transform: translateY(-30px) scale(0.8); opacity: 0; }
+}
+
+/* 盯着鼠标看 */
+.pet.looking .px.eye {
+  transform: scale(1.3);
+  transition: transform 0.3s ease;
+}
+
+/* 猫尾巴 */
+.skin-cat .cat-tail {
+  position: absolute;
+  bottom: 12px;
+  right: -6px;
+  width: 4px;
+  height: 16px;
+  background: #F5A623;
+  border: 1px solid #D4901E;
+  border-radius: 2px 2px 0 0;
+  transform-origin: bottom center;
+  animation: tail-wag 1.2s ease-in-out infinite;
+}
+
+.skin-cat .cat-tail::after {
+  content: '';
+  position: absolute;
+  top: -3px;
+  left: -1px;
+  width: 6px;
+  height: 6px;
+  background: #F5A623;
+  border: 1px solid #D4901E;
+  border-radius: 50%;
+}
+
+@keyframes tail-wag {
+  0%, 100% { transform: rotate(-10deg); }
+  50% { transform: rotate(15deg); }
 }

@@ -32,6 +32,12 @@ class Pet {
     this.x = 24 // 相对于容器的位置
     this.y = 10
 
+    // 皮肤
+    this.currentSkin = 'human'
+
+    // 拖拽状态
+    this.isDragging = false
+
     // 动画定时器
     this.animationTimer = null
     this.behaviorTimer = null
@@ -64,6 +70,11 @@ class Pet {
       return false
     }
 
+    // 渲染初始皮肤
+    if (typeof switchSkin === 'function') {
+      switchSkin(this.currentSkin)
+    }
+
     this.setupAutoBehavior()
     this.updateDisplay()
 
@@ -76,6 +87,13 @@ class Pet {
 
     const oldState = this.state
     this.clearStateTimer()
+
+    // 离开行走状态时清除行走定时器
+    if (oldState === PetState.WALKING && this.walkInterval) {
+      clearInterval(this.walkInterval)
+      this.walkInterval = null
+    }
+
     this.state = newState
 
     // 更新DOM类名
@@ -97,9 +115,8 @@ class Pet {
         this.showSleepBubble()
         break
       case PetState.HAPPY:
-        this.showHearts()
         // 2秒后回到待机
-        setTimeout(() => {
+        this.stateTimer = setTimeout(() => {
           if (this.state === PetState.HAPPY) {
             this.setState(PetState.IDLE)
           }
@@ -107,14 +124,14 @@ class Pet {
         break
       case PetState.EATING:
         // 1.5秒后回到待机
-        setTimeout(() => {
+        this.stateTimer = setTimeout(() => {
           if (this.state === PetState.EATING) {
             this.setState(PetState.IDLE)
           }
         }, 1500)
         break
       case PetState.BORED:
-        this.showSpeechBubble('好无聊...', 1600)
+        this.showSpeechBubble(pickDialogue('bored'), 1600)
         this.stateTimer = setTimeout(() => {
           if (this.state === PetState.BORED) {
             Math.random() < 0.45 ? this.startFollowingMouse() : this.setState(PetState.IDLE)
@@ -122,7 +139,7 @@ class Pet {
         }, 2500)
         break
       case PetState.SLEEPY:
-        this.showSpeechBubble('有点困...', 1600)
+        this.showSpeechBubble(pickDialogue('sleepy'), 1600)
         this.stateTimer = setTimeout(() => {
           if (this.state === PetState.SLEEPY) {
             this.energy < 18 ? this.sleep() : this.setState(PetState.IDLE)
@@ -130,10 +147,10 @@ class Pet {
         }, 2500)
         break
       case PetState.HUNGRY:
-        this.showSpeechBubble('我饿了...', 1800)
+        this.showSpeechBubble(pickDialogue('hungry'), 1800)
         break
       case PetState.SAD:
-        this.showSpeechBubble('陪陪我嘛...', 1800)
+        this.showSpeechBubble(pickDialogue('bored'), 1800)
         break
       case PetState.FOLLOWING:
         this.showSpeechBubble('等等我~', 1200)
@@ -167,6 +184,12 @@ class Pet {
 
   // 显示睡眠气泡
   showSleepBubble() {
+    // 清除旧的定时器，防止内存泄漏
+    if (this.sleepBubbleInterval) {
+      clearInterval(this.sleepBubbleInterval)
+      this.sleepBubbleInterval = null
+    }
+
     // 移除现有的气泡
     const existingBubble = document.querySelector('.sleep-zzz')
     if (existingBubble) {
@@ -241,8 +264,8 @@ class Pet {
 
   // 自动行为逻辑
   autoBehavior() {
-    // 如果正在被交互，跳过
-    if (this.isBusyState()) {
+    // 如果正在被交互或被拖拽，跳过
+    if (this.isBusyState() || this.isDragging) {
       this.updateStats()
       return
     }
@@ -351,7 +374,13 @@ class Pet {
 
   // 开始走路
   startWalking() {
-    if (this.state === PetState.SLEEPING || this.state === PetState.FOLLOWING) return
+    if (this.state === PetState.SLEEPING || this.state === PetState.FOLLOWING || this.isDragging) return
+
+    // 清除旧的行走定时器，防止多个 interval 同时运行
+    if (this.walkInterval) {
+      clearInterval(this.walkInterval)
+      this.walkInterval = null
+    }
 
     this.setState(PetState.WALKING)
 
@@ -363,43 +392,43 @@ class Pet {
     this.walkAnimation(direction)
 
     // 走路一段时间后停止
-    setTimeout(() => {
+    this.stateTimer = setTimeout(() => {
       if (this.state === PetState.WALKING) {
         this.setState(PetState.IDLE)
       }
     }, this.walkDuration)
   }
 
-  // 走路动画
+  // 走路动画（单一 interval，边界自动反向）
   walkAnimation(direction) {
-    const step = direction === Direction.LEFT ? -this.walkSpeed : this.walkSpeed
-    const containerWidth = 200
+    if (this.walkInterval) {
+      clearInterval(this.walkInterval)
+    }
+
+    const containerWidth = this.containerElement ? this.containerElement.offsetWidth : 200
     const petWidth = 64
     const minX = 20
     const maxX = containerWidth - petWidth - 20
 
     this.walkInterval = setInterval(() => {
-      if (this.state !== PetState.WALKING) {
+      if (this.state !== PetState.WALKING || this.isDragging) {
         clearInterval(this.walkInterval)
+        this.walkInterval = null
         return
       }
 
+      const step = this.direction === Direction.LEFT ? -this.walkSpeed : this.walkSpeed
       this.x += step
 
-      // 边界检测
+      // 边界检测：到达边界时反向，不递归创建新 interval
       if (this.x <= minX) {
         this.x = minX
         this.setDirection(Direction.RIGHT)
-        clearInterval(this.walkInterval)
-        this.walkAnimation(Direction.RIGHT)
       } else if (this.x >= maxX) {
         this.x = maxX
         this.setDirection(Direction.LEFT)
-        clearInterval(this.walkInterval)
-        this.walkAnimation(Direction.LEFT)
       }
 
-      // 更新位置
       this.petElement.style.left = `${this.x}px`
     }, 50)
   }
@@ -425,38 +454,56 @@ class Pet {
         return
       }
 
-      const [cursor, windowPosition] = await Promise.all([
-        window.electronAPI.getCursorPosition(),
-        window.electronAPI.getWindowPosition()
-      ])
+      try {
+        const [cursor, windowPosition] = await Promise.all([
+          window.electronAPI.getCursorPosition(),
+          window.electronAPI.getWindowPosition()
+        ])
 
-      const petCenterX = windowPosition.x + this.x + 32
-      const petCenterY = windowPosition.y + 120
-      const deltaX = cursor.x - petCenterX
-      const deltaY = cursor.y - petCenterY
-      const distance = Math.hypot(deltaX, deltaY)
+        const petCenterX = windowPosition.x + this.x + 32
+        const petCenterY = windowPosition.y + 120
+        const deltaX = cursor.x - petCenterX
+        const deltaY = cursor.y - petCenterY
+        const distance = Math.hypot(deltaX, deltaY)
 
-      if (distance < this.followDistance) {
-        return
-      }
+        if (distance < this.followDistance) {
+          return
+        }
 
-      const stepX = Math.round((deltaX / distance) * this.followSpeed)
-      const stepY = Math.round((deltaY / distance) * this.followSpeed)
+        const stepX = Math.round((deltaX / distance) * this.followSpeed)
+        const stepY = Math.round((deltaY / distance) * this.followSpeed)
 
-      window.electronAPI.moveWindow(stepX, stepY)
+        window.electronAPI.moveWindow(stepX, stepY)
 
-      if (Math.abs(deltaX) > 8) {
-        this.setDirection(deltaX > 0 ? Direction.RIGHT : Direction.LEFT)
+        if (Math.abs(deltaX) > 8) {
+          this.setDirection(deltaX > 0 ? Direction.RIGHT : Direction.LEFT)
+        }
+      } catch (err) {
+        console.warn('跟随鼠标 IPC 调用失败:', err.message)
+        clearInterval(this.followInterval)
       }
     }, 80)
   }
 
-  // 看到鼠标时可能被吸引过去
-  noticeMouse() {
+  // 看到鼠标时的反应：转头盯着看，高无聊度时跟随
+  noticeMouse(cursorX) {
+    if (this.isDragging) return
+
+    // IDLE 状态下经常朝鼠标方向转头
+    if (this.state === PetState.IDLE && typeof cursorX === 'number') {
+      const petCenter = this.containerElement
+        ? this.containerElement.offsetWidth / 2
+        : 100
+      const dir = cursorX < petCenter ? Direction.LEFT : Direction.RIGHT
+      if (this.direction !== dir) {
+        this.setDirection(dir)
+      }
+    }
+
+    // 高无聊度时低概率跟随鼠标
     if (this.state !== PetState.IDLE && this.state !== PetState.BORED && this.state !== PetState.SAD) {
       return
     }
-
     if (this.boredom > 35 && Math.random() < 0.05) {
       this.startFollowingMouse()
     }
@@ -472,7 +519,7 @@ class Pet {
     this.setState(PetState.HAPPY)
     this.mood = Math.min(100, this.mood + 20)
     this.boredom = Math.max(0, this.boredom - 35)
-    this.showSpeechBubble('开心~')
+    this.showSpeechBubble(pickDialogue('pet'))
   }
 
   // 喂食
@@ -489,7 +536,7 @@ class Pet {
 
     // 显示食物动画
     this.showFoodAnimation()
-    this.showSpeechBubble('好吃！')
+    this.showSpeechBubble(pickDialogue('feed'))
   }
 
   // 显示食物动画
@@ -526,7 +573,7 @@ class Pet {
       clearInterval(this.sleepBubbleInterval)
     }
 
-    this.showSpeechBubble('早上好！')
+    this.showSpeechBubble(pickDialogue('wake'))
   }
 
   // 获取宠物状态信息
@@ -540,6 +587,25 @@ class Pet {
       direction: this.direction,
       position: { x: this.x, y: this.y }
     }
+  }
+
+  // 切换皮肤
+  setSkin(skinId) {
+    if (!SKIN_REGISTRY || !SKIN_REGISTRY[skinId]) return
+    this.currentSkin = skinId
+    switchSkin(skinId)
+    this.updateDisplay()
+    this.showSpeechBubble(SKIN_REGISTRY[skinId].name + '登场！', 1500)
+  }
+
+  // 获取皮肤列表
+  getSkinList() {
+    if (!SKIN_REGISTRY) return []
+    return Object.entries(SKIN_REGISTRY).map(([id, skin]) => ({
+      id,
+      name: skin.name,
+      active: id === this.currentSkin,
+    }))
   }
 
   // 清理资源
@@ -563,7 +629,52 @@ class Pet {
   }
 }
 
+
+// 丰富对话库
+const DIALOGUES = {
+  idle: [
+    '今天天气真好~', '你在干嘛呀？', '摸摸我嘛',
+    '嘿嘿~', '我在这里哦', '无聊...',
+    '想出去玩', '你在看什么？', '嘿嘿嘿',
+    '有人在吗？', '打个盹好了', '肚子有点饿了',
+    '今天吃什么？', '好想散步~', '嘿，看我！',
+  ],
+  pet: [
+    '开心~', '嘿嘿嘿~', '好舒服', '再摸摸',
+    '不要停~', '好幸福呀', '嘻嘻',
+  ],
+  feed: [
+    '好吃！', '谢谢~', '还要！', '嗯嗯嗯~',
+    '太好吃了', '吃饱了~', '美味！',
+  ],
+  wake: [
+    '早上好！', '嗯...天亮了？', '再睡一会嘛...',
+    '早安~', '新的一天！',
+  ],
+  drag: [
+    '哇~飞起来了', '放我下来！', '好高好高',
+    '救命~', '呜呜呜', '头好晕',
+  ],
+  bored: [
+    '好无聊...', '陪我玩嘛', '你是不是忘了我？',
+    '呜呜...', '一个人好寂寞',
+  ],
+  sleepy: [
+    '有点困...', '想睡觉了', '眼皮好重...',
+    '晚安...', '打哈欠~',
+  ],
+  hungry: [
+    '我饿了...', '肚子咕咕叫', '想吃东西',
+    '有没有零食？', '快饿扁了...',
+  ],
+}
+
+function pickDialogue(category) {
+  const list = DIALOGUES[category]
+  if (!list || list.length === 0) return '...'
+  return list[Math.floor(Math.random() * list.length)]
+}
 // 导出Pet类
 if (typeof module !== 'undefined' && module.exports) {
-  module.exports = { Pet, PetState, Direction }
+  module.exports = { Pet, PetState, Direction, DIALOGUES, pickDialogue }
 }

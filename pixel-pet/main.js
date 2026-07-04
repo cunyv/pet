@@ -1,4 +1,4 @@
-const { app, BrowserWindow, Tray, Menu, ipcMain, screen, nativeImage } = require('electron')
+const { app, BrowserWindow, Tray, Menu, ipcMain, screen, nativeImage, globalShortcut } = require('electron')
 const path = require('path')
 
 const BASE_WINDOW_SIZE = { width: 200, height: 250 }
@@ -106,6 +106,10 @@ function setPassthroughMode(enabled) {
   updateTrayMenu()
 }
 
+function togglePassthroughMode() {
+  setPassthroughMode(!passthroughMode)
+}
+
 // 创建主窗口
 function createWindow() {
   const { width, height } = screen.getPrimaryDisplay().workAreaSize
@@ -211,7 +215,7 @@ function updateTrayMenu() {
       }
     },
     {
-      label: '鼠标穿透模式',
+      label: '鼠标穿透模式 (⌘⇧P)',
       type: 'checkbox',
       checked: passthroughMode,
       click: (menuItem) => {
@@ -266,8 +270,9 @@ function updateTrayMenu() {
 
 // 创建系统托盘
 function createTray() {
-  // 创建一个简单的托盘图标
-  const icon = nativeImage.createEmpty()
+  const icon = nativeImage
+    .createFromPath(path.join(__dirname, 'resources', 'icon.png'))
+    .resize({ width: 18, height: 18 })
   tray = new Tray(icon)
 
   tray.setToolTip('像素宠物')
@@ -285,6 +290,7 @@ function createTray() {
 app.whenReady().then(() => {
   createWindow()
   createTray()
+  globalShortcut.register('CommandOrControl+Shift+P', togglePassthroughMode)
 
   app.on('activate', () => {
     if (BrowserWindow.getAllWindows().length === 0) {
@@ -302,7 +308,7 @@ app.on('window-all-closed', () => {
 
 // 应用即将退出
 app.on('before-quit', () => {
-  // 清理资源
+  globalShortcut.unregisterAll()
 })
 
 // IPC通信处理
